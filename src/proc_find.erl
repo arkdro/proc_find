@@ -71,11 +71,12 @@ calc_stat([]) ->
     [];
 calc_stat(Data) ->
     L2 = [{N, Pid} || {Pid, N} <- Data],
-    {Max, Min, Sum} = get_max_min(L2),
+    {Max3, Max, Min, Sum} = get_max_min(L2),
     Len = length(Data),
     Avg = Sum / Len,
     [
      {length, Len},
+     {max3, Max3},
      {max, Max},
      {min, Min},
      {sum, Sum},
@@ -83,18 +84,23 @@ calc_stat(Data) ->
     ].
 
 get_max_min(L) ->
-    get_max_min(L, {-1, stub}, {1000000, stub}, 0).
+    get_max_min(L, [], {-1, stub}, {1000000, stub}, 0).
 
-get_max_min([], Max, Min, Sum) ->
-    {Max, Min, Sum};
-get_max_min([H | T], Max, Min, Sum) ->
+get_max_min([], Max3, Max, Min, Sum) ->
+    {Max3, Max, Min, Sum};
+get_max_min([H | T], Max3, Max, Min, Sum) ->
+    NewMax3 = choose_max3(H, Max3),
     Max2 = choose_max(H, Max),
     Min2 = choose_min(H, Min),
     Sum2 = calc_new_sum(H, Sum),
-    get_max_min(T, Max2, Min2, Sum2).
+    get_max_min(T, NewMax3, Max2, Min2, Sum2).
 
 calc_new_sum({N, _}, Sum) ->
     N + Sum.
+
+choose_max3(Item, L) ->
+    L2 = lists:sort(fun erlang:'>'/2, [Item | L]),
+    lists:sublist(L2, 3).
 
 choose_max(H, Max) when H > Max ->
     H;
